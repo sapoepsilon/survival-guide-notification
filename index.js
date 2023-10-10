@@ -12,6 +12,33 @@ admin.initializeApp({
 
 app.use(express.json());
 
+/**
+ * @openapi
+ * /sendNotification:
+ *   post:
+ *     summary: Send a notification to a specific device.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: Token from the client app.
+ *               title:
+ *                 type: string
+ *                 description: Title of the notification.
+ *               body:
+ *                 type: string
+ *                 description: Body content of the notification.
+ *     responses:
+ *       '200':
+ *         description: Notification sent successfully.
+ *       '500':
+ *         description: Error sending the notification.
+ */
 app.post('/sendNotification', (req, res) => {
   const registrationToken = req.body.token; // Token from the client app
   const message = {
@@ -35,6 +62,36 @@ app.post('/sendNotification', (req, res) => {
     });
 });
 
+/**
+ * @openapi
+ * /sendTopicNotification:
+ *   post:
+ *     summary: Send a notification to all devices subscribed to a specified topic.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               topic:
+ *                 type: string
+ *                 description: Topic to send the notification to. Default is 'all'.
+ *                 example: "your_topic_here"
+ *               title:
+ *                 type: string
+ *                 description: Title of the notification.
+ *                 example: "Topic Notification Title"
+ *               body:
+ *                 type: string
+ *                 description: Body content of the notification.
+ *                 example: "Topic Notification Body Content"
+ *     responses:
+ *       '200':
+ *         description: Notification sent successfully.
+ *       '500':
+ *         description: Error sending the notification.
+ */
 app.post('/sendTopicNotification', (req, res) => {
   const topic = req.body.topic || 'all'; // Default topic is 'all'
   const message = {
@@ -61,3 +118,32 @@ const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`);
 });
+
+const swaggerJsdoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
+
+// Swagger definition
+const swaggerDefinition = {
+  openapi: '3.0.0',
+  info: {
+    title: 'FCM Notification Server',
+    version: '1.0.0',
+    description: 'An API to send Firebase Cloud Messaging (FCM) notifications.',
+  },
+  servers: [
+    {
+      url: 'https://survival-guide-notification-backend.onrender.com/',
+    },
+  ],
+};
+
+// Options for the swagger docs
+const options = {
+  swaggerDefinition,
+  apis: ['./index.js'], // path to the API docs
+};
+
+// Initialize swagger-jsdoc
+const swaggerSpec = swaggerJsdoc(options);
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
