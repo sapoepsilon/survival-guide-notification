@@ -35,6 +35,28 @@ app.post('/sendNotification', (req, res) => {
     });
 });
 
+app.post('/sendTopicNotification', (req, res) => {
+  const topic = req.body.topic || 'all'; // Default topic is 'all'
+  const message = {
+    notification: {
+      title: req.body.title || 'Default Title',
+      body: req.body.body || 'Default Body',
+    },
+    topic: topic,
+  };
+
+  // Send a message to the specified topic
+  admin.messaging().send(message)
+    .then((response) => {
+      console.log('Successfully sent topic message:', response);
+      res.send('Successfully sent topic message');
+    })
+    .catch((error) => {
+      console.log('Error sending topic message:', error);
+      res.status(500).send('Error sending topic message');
+    });
+});
+
 const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`);
