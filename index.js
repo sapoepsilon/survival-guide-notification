@@ -115,6 +115,84 @@ app.post('/sendTopicNotification', (req, res) => {
     });
 });
 
+/**
+ * @openapi
+ * /sendTopicImageNotification:
+ *   post:
+ *     summary: Send a notification with an image to all devices subscribed to a specified topic.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               topic:
+ *                 type: string
+ *                 description: Topic to send the notification to. Default is 'all'.
+ *                 example: "your_topic_here"
+ *               title:
+ *                 type: string
+ *                 description: Title of the notification.
+ *                 example: "Topic Notification Title"
+ *               body:
+ *                 type: string
+ *                 description: Body content of the notification.
+ *                 example: "Topic Notification Body Content"
+ *               imageUrl:
+ *                 type: string
+ *                 description: Image URL for the notification.
+ *                 example: "https://example.com/image.jpg"
+ *     responses:
+ *       '200':
+ *         description: Notification sent successfully.
+ *       '500':
+ *         description: Error sending the notification.
+ */
+app.post('/sendTopicImageNotification', (req, res) => {
+  const topic = req.body.topic || 'industry-tech'; // Default topic
+  const message = {
+    notification: {
+      title: req.body.title || 'Default Title',
+      body: req.body.body || 'Default Body',
+    },
+    android: {
+      notification: {
+        imageUrl: req.body.imageUrl // Image URL for Android
+      }
+    },
+    apns: {
+      payload: {
+        aps: {
+          'mutable-content': 1
+        }
+      },
+      fcm_options: {
+        image: req.body.imageUrl // Image URL for APNs (iOS)
+      }
+    },
+    webpush: {
+      headers: {
+        image: req.body.imageUrl // Image URL for Web Push
+      }
+    },
+    topic: topic,
+  };
+
+  // Send a message to the specified topic
+  admin.messaging().send(message)
+    .then((response) => {
+      console.log('Successfully sent topic message with image:', response);
+      res.send('Successfully sent topic message with image');
+    })
+    .catch((error) => {
+      console.log('Error sending topic message with image:', error.message);
+      res.status(500).send('Error sending topic message with image');
+    });
+});
+
+
+
 const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`);
@@ -134,6 +212,7 @@ const swaggerDefinition = {
   servers: [
     {
       url: 'https://survival-guide-notification-backend.onrender.com/',
+      url: 'http://localhost:3000/',
     },
   ],
 };
@@ -141,7 +220,7 @@ const swaggerDefinition = {
 // Options for the swagger docs
 const options = {
   swaggerDefinition,
-  apis: ['./index.js'], // path to the API docs
+  apis: ['./index.js'], 
 };
 
 // Initialize swagger-jsdoc
